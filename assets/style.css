@@ -1,0 +1,58 @@
+@font-face {
+    font-family: 'QuanticoBold';
+    src: url('fonts/Quantico-Bold.ttf') format('truetype')
+}
+
+.Header1 {
+    text-align: center;
+    color: #ffffff; 
+    font-size: 2.5em;
+    background-color: #42434D;
+    font-family: 'QuanticoBold';
+}
+
+.Header2 {
+    text-align: center;
+    font-size: 2.5em;
+    background-color: #3A3B46;
+    font-family: 'QuanticoBold';
+    margin: 100px;
+}
+
+/* 
+.header1 {
+  text-align: center;
+  font-size: 2.5em;
+  background-color: #42434D;
+  color: #ffffff
+}
+
+* {
+  border: 2px solid black
+}
+.header2 {
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  background-color: #3A3B46;
+  padding: 10px 0; 
+}
+
+.selection-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+}
+
+.selection {
+  font-size: 2em; 
+  color: white; 
+}
+
+.driver-dropdown {
+  font-size: 2em; 
+}
+
+
+*/
