@@ -33,28 +33,31 @@ app.layout = html.Div([
         ),
 
     html.Div(
-        className = 'Header2'
-        ),
-
-    dbc.Container(
-        dbc.Alert("Testing Alerts", color = "success"),
-        className='p-5'
+        className='Header2',
+        children=[
+            html.Div(
+                className='selection-container',
+                children=[
+                    html.Span("Select Driver:", className='selection'),
+                    dcc.Dropdown(
+                        id="select_primary_driver",
+                        className="driver-dropdown",
+                        options=driver_dropdown_options,
+                        multi=False,
+                        value=None,
+                        style={'width': '100%', 'minWidth': '200px'}
+                    )
+                ]
+            )
+        ]
     ),
 
-    #Dropdown for races
+
     dcc.Dropdown(id="select_race",
                 options=race_dropdown_options,
                 multi=False,
                 value=None,
                 style={'width': "40%"}
-                ),
-    
-    #Dropdown for primary driver
-    dcc.Dropdown(id="select_primary_driver",
-                options=driver_dropdown_options,
-                multi=False,
-                value = None,
-                style={'width':"40%"}
                 ),
     
     #Dropdown for secondary driver
@@ -65,11 +68,22 @@ app.layout = html.Div([
                 style={'width':"40%"}
                 ),
 
+
+    dbc.Row([
+        dbc.Col(
+            html.Div(
+                dcc.Graph(id='lapchart', figure={}), 
+                className="visual-box"
+                ), 
+            width=6, lg=6, md=12, sm=12, xs=12),
+
+        dbc.Col(html.Div("Visual 2", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
+        dbc.Col(html.Div("Visual 3", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
+        dbc.Col(html.Div("Visual 4", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12)
+    ], className="mb-4"),
+
+
     html.Div(id='output_container', children=[]),
-    html.Br(),
-
-    dcc.Graph(id='lapchart', figure={})
-
 ])
 
 
@@ -91,11 +105,11 @@ def update_secondary_driver_dropdown(selected_primary_driver):
 
 # Update graph callback
 @app.callback(
-    [Output(component_id='output_container', component_property='children'),
-    Output(component_id='lapchart', component_property='figure')],
-    [Input(component_id='select_race', component_property='value')],
-    [Input(component_id='select_primary_driver', component_property='value')],
-    [Input(component_id='select_secondary_driver', component_property='value')]
+    [Output('output_container', 'children'),
+    Output('lapchart', 'figure')],
+    [Input('select_race', 'value'),
+    Input('select_primary_driver', 'value'),
+    Input('select_secondary_driver', 'value')]
 )
 
 def update_graph(race_selected, primary_driver, secondary_driver):
