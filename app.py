@@ -44,7 +44,7 @@ app.layout = html.Div([
                         className="driver-dropdown",
                         options=driver_dropdown_options,
                         multi=False,
-                        value=None,
+                        value="",
                         style={'width': '100%', 'minWidth': '200px'}
                     )
                 ]
@@ -56,7 +56,7 @@ app.layout = html.Div([
     dcc.Dropdown(id="select_race",
                 options=race_dropdown_options,
                 multi=False,
-                value=None,
+                value="",
                 style={'width': "40%"}
                 ),
     
@@ -64,19 +64,13 @@ app.layout = html.Div([
     dcc.Dropdown(id="select_secondary_driver",
                 options=[],
                 multi=False,
-                value = None,
+                value = "",
                 style={'width':"40%"}
                 ),
 
 
     dbc.Row([
-        dbc.Col(
-            html.Div(
-                dcc.Graph(id='lapchart', figure={}), 
-                className="visual-box"
-                ), 
-            width=6, lg=6, md=12, sm=12, xs=12),
-
+        dbc.Col( html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
         dbc.Col(html.Div("Visual 2", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
         dbc.Col(html.Div("Visual 3", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
         dbc.Col(html.Div("Visual 4", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12)
@@ -142,20 +136,60 @@ def update_graph(race_selected, primary_driver, secondary_driver):
         fig = go.Figure(data=[MainDriverData, SecondaryDriverData])
 
         fig.update_layout(
-            title = f"{primary_driver} lap times vs. {secondary_driver} lap times",
-            xaxis_title = "Lap",
-            yaxis_title = "Lap Time"
+            title={
+                'text' : f"{primary_driver} vs. {secondary_driver} lap times",
+                'y': 0.95,  # Move the title a bit closer to the top of the figure
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            yaxis=dict(
+                range=[31,65],
+                gridcolor='black',
+                zerolinecolor='black'
+            ),
+            xaxis=dict(
+                gridcolor='black',
+                zerolinecolor='black'
+                ),
+            paper_bgcolor = '#D9D9D9',
+            plot_bgcolor = '#D9D9D9',
+            font_color= 'black',
+            title_font_size=24,
+            margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+            xaxis_title="Lap",
+            yaxis_title="Lap Time"
         )
 
     else:
-        #Creating Graph
         fig = go.Figure(data=[MainDriverData])
 
         fig.update_layout(
-            title = f"{primary_driver} lap times",
-            xaxis_title = "Lap",
-            yaxis_title = "Lap Time"
+            title={
+                'text': f"{primary_driver} lap times",
+                'y': 0.95,  # Move the title a bit closer to the top of the figure
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            yaxis=dict(
+                range=[31,65],
+                gridcolor='black',
+                zerolinecolor='black'
+            ),
+            xaxis=dict(
+                gridcolor='black',
+                zerolinecolor='black'
+                ),
+            paper_bgcolor = '#D9D9D9',
+            plot_bgcolor = '#D9D9D9',
+            font_color= 'black',
+            title_font_size=24,
+            margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+            xaxis_title="Lap",
+            yaxis_title="Lap Time"
         )
+
 
     return container, fig
 
