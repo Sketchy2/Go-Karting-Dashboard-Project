@@ -70,14 +70,12 @@ app.layout = html.Div([
 
 
     dbc.Row([
-        dbc.Col( html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
-        dbc.Col(html.Div("Visual 2", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
+        dbc.Col(html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
+        dbc.Col(html.Div(dcc.Graph(id='avgchart', figure={}, className='Chart2'), className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
+
         dbc.Col(html.Div("Visual 3", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
         dbc.Col(html.Div("Visual 4", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12)
     ], className="mb-4"),
-
-
-    html.Div(id='output_container', children=[]),
 ])
 
 
@@ -97,17 +95,15 @@ def update_secondary_driver_dropdown(selected_primary_driver):
 
 
 
-# Update graph callback
+# Update Visual1 callback
 @app.callback(
-    [Output('output_container', 'children'),
-    Output('lapchart', 'figure')],
+    Output('lapchart', 'figure'),
     [Input('select_race', 'value'),
     Input('select_primary_driver', 'value'),
     Input('select_secondary_driver', 'value')]
 )
 
-def update_graph(race_selected, primary_driver, secondary_driver):
-    container = "The race chosen by user was: {}".format(race_selected)
+def update_visual1(race_selected, primary_driver, secondary_driver):
 
     df2 = df.copy()
     df2 = df2[df2["RaceID"] == race_selected]
@@ -121,7 +117,9 @@ def update_graph(race_selected, primary_driver, secondary_driver):
     )
 
 
+    # If secondary driver is chosen, and the primary driver is not the same as the secondary driver - create new Scatter & Title
     if secondary_driver and primary_driver != secondary_driver:
+
         df3 = df.copy()
         df3 = df3[df3["RaceID"] == race_selected]
         df3 = df3[df3["Racer"] == secondary_driver]
@@ -134,65 +132,94 @@ def update_graph(race_selected, primary_driver, secondary_driver):
     )
         #Creating Graph
         fig = go.Figure(data=[MainDriverData, SecondaryDriverData])
+        text = f"{primary_driver} vs. {secondary_driver} lap times"
 
-        fig.update_layout(
-            title={
-                'text' : f"{primary_driver} vs. {secondary_driver} lap times",
-                'y': 0.95,  # Move the title a bit closer to the top of the figure
-                'x': 0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'
-            },
-            yaxis=dict(
-                range=[31,65],
-                gridcolor='black',
-                zerolinecolor='black'
-            ),
-            xaxis=dict(
-                gridcolor='black',
-                zerolinecolor='black'
-                ),
-            paper_bgcolor = '#D9D9D9',
-            plot_bgcolor = '#D9D9D9',
-            font_color= 'black',
-            title_font_size=24,
-            margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
-            xaxis_title="Lap",
-            yaxis_title="Lap Time"
-        )
 
     else:
         fig = go.Figure(data=[MainDriverData])
+        text = f"{primary_driver} lap times"
 
-        fig.update_layout(
-            title={
-                'text': f"{primary_driver} lap times",
-                'y': 0.95,  # Move the title a bit closer to the top of the figure
-                'x': 0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'
-            },
-            yaxis=dict(
-                range=[31,65],
-                gridcolor='black',
-                zerolinecolor='black'
+
+    fig.update_layout(
+        title={
+            'text': text,
+            'y': 0.95,  # Move the title a bit closer to the top of the figure
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+        yaxis=dict(
+            range=[31,65],
+            gridcolor='black',
+            zerolinecolor='black'
+        ),
+        xaxis=dict(
+            gridcolor='black',
+            zerolinecolor='black'
             ),
-            xaxis=dict(
-                gridcolor='black',
-                zerolinecolor='black'
-                ),
-            paper_bgcolor = '#D9D9D9',
-            plot_bgcolor = '#D9D9D9',
-            font_color= 'black',
-            title_font_size=24,
-            margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
-            xaxis_title="Lap",
-            yaxis_title="Lap Time"
-        )
+        paper_bgcolor = '#D9D9D9',
+        plot_bgcolor = '#D9D9D9',
+        font_color= 'black',
+        title_font_size=24,
+        margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+        xaxis_title="Lap",
+        yaxis_title="Lap Time"
+    )
 
 
-    return container, fig
+    return fig
 
+
+# Update Visual2 callback
+@app.callback(
+    Output('avgchart', 'figure'),
+    Input('select_primary_driver', 'value')
+)
+
+def update_visual2(primary_driver):
+
+    df2 = df.copy()
+    df2 = df2[df2["Racer"] == primary_driver]
+    df2 = df2.groupby('RaceID')['Lap Time Seconds'].mean()
+    df2 = df2.reset_index()
+
+    MainDriverAvg = go.Bar(
+        x = df2["RaceID"],
+        y = df2["Lap Time Seconds"],
+        name = 'MainDriverAvg'
+    )
+
+    fig = go.Figure(data = [MainDriverAvg])
+    text = f"{primary_driver}'s Avg Lap Times"
+
+    fig.update_layout(
+        title={
+            'text': text,
+            'y': 0.95,  # Move the title a bit closer to the top of the figure
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+        yaxis=dict(
+            range=[31,59],
+            gridcolor='black',
+            zerolinecolor='black'
+        ),
+        xaxis=dict(
+            gridcolor='black',
+            zerolinecolor='black'
+            ),
+        paper_bgcolor = '#D9D9D9',
+        plot_bgcolor = '#D9D9D9',
+        font_color= 'black',
+        title_font_size=24,
+        margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+        xaxis_title="Race",
+        yaxis_title="Average Lap Time"
+    )
+
+
+    return fig
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
