@@ -72,8 +72,8 @@ app.layout = html.Div([
     dbc.Row([
         dbc.Col(html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
         dbc.Col(html.Div(dcc.Graph(id='avgchart', figure={}, className='Chart2'), className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
+        dbc.Col(html.Div(dcc.Graph(id='fastestchart', className="Chart3"),className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
 
-        dbc.Col(html.Div("Visual 3", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12),
         dbc.Col(html.Div("Visual 4", className="visual-box"), width=6, lg=6, md=12, sm=12, xs=12)
     ], className="mb-4"),
 ])
@@ -172,7 +172,8 @@ def update_visual1(race_selected, primary_driver, secondary_driver):
 
 # Update Visual2 callback
 @app.callback(
-    Output('avgchart', 'figure'),
+    [Output('avgchart', 'figure'),
+    Output('fastestchart','figure')],
     Input('select_primary_driver', 'value')
 )
 
@@ -219,7 +220,24 @@ def update_visual2(primary_driver):
     )
 
 
-    return fig
+
+    df3 = df.copy()
+    # Step 1: Group by 'RaceID' and find the minimum 'Lap Time Seconds'
+    min_lap_times = df3.groupby('RaceID')['Lap Time Seconds'].min().reset_index()
+
+    # Step 2: Merge with the original DataFrame to get the 'Racer' names
+    df3 = pd.merge(min_lap_times, df2, on=['RaceID', 'Lap Time Seconds'], how='left')
+    df3 = df3.groupby("Racer")["Racer"].count()
+    racer_count = df3.groupby("Racer")["Racer"].count()
+    # Convert the Series to a DataFrame and reset the index
+    racer_count_df = racer_count.reset_index(name='Count')
+
+
+    labels = df3["Racer"].unique()
+    values = df3["Count"]
+    fig2 = go.Figure(data=[go.Pie(labels=labels, values=values)])
+
+    return fig,fig2
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
