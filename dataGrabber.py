@@ -49,7 +49,7 @@ def laps(racer: str, race: int) -> List:
 
     return time, date,laps
 
-racers = ["mitchell.whitten","mathew.stephen"]
+racers = ["mitchell.whitten","mathew.stephen", "noah.thomson.4","josh.kolappillil","darian.king"]
 record_set = []
 for racer in racers:
     index = 0
