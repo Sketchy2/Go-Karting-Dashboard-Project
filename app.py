@@ -17,7 +17,7 @@ df = pd.read_csv("RaceTimes.csv")
 print(df)
 
 #Option for races
-unique_races = df['RaceID'].unique()
+unique_races = df['RaceID Name'].unique()
 race_dropdown_options = [{'label': race, 'value': race} for race in unique_races]
 
 #Option for drivers
@@ -104,7 +104,7 @@ def update_secondary_driver_dropdown(selected_primary_driver):
 def update_visual1(race_selected, primary_driver, secondary_driver):
 
     df2 = df.copy()
-    df2 = df2[df2["RaceID"] == race_selected]
+    df2 = df2[df2["RaceID Name"] == race_selected]
     df2 = df2[df2["Racer"] == primary_driver]
 
     MainDriverData = go.Scatter(
@@ -119,7 +119,7 @@ def update_visual1(race_selected, primary_driver, secondary_driver):
     if secondary_driver and primary_driver != secondary_driver:
 
         df3 = df.copy()
-        df3 = df3[df3["RaceID"] == race_selected]
+        df3 = df3[df3["RaceID Name"] == race_selected]
         df3 = df3[df3["Racer"] == secondary_driver]
 
         SecondaryDriverData = go.Scatter(
@@ -184,11 +184,11 @@ def update_visual2(primary_driver):
 
     df2 = df.copy()
     df2 = df2[df2["Racer"] == primary_driver]
-    df2 = df2.groupby('RaceID')['Lap Time Seconds'].mean()
+    df2 = df2.groupby('RaceID Name')['Lap Time Seconds'].mean()
     df2 = df2.reset_index()
 
     MainDriverAvg = go.Bar(
-        x = df2["RaceID"],
+        x = df2["RaceID Name"],
         y = df2["Lap Time Seconds"],
         name = 'MainDriverAvg'
     )
@@ -228,12 +228,12 @@ def update_visual2(primary_driver):
 
 
     df3 = df.copy()
-    # Step 1: Group by 'RaceID' and find the minimum 'Lap Time Seconds'
-    min_lap_times = df3.groupby('RaceID')['Lap Time Seconds'].min().reset_index()
+    # Step 1: Group by 'RaceID Name' and find the minimum 'Lap Time Seconds'
+    min_lap_times = df3.groupby('RaceID Name')['Lap Time Seconds'].min().reset_index()
 
 
     # Step 2: Merge with the original DataFrame to get the 'Racer' names
-    df3 = pd.merge(min_lap_times, df3, on=['RaceID', 'Lap Time Seconds'], how='left')
+    df3 = pd.merge(min_lap_times, df3, on=['RaceID Name', 'Lap Time Seconds'], how='left')
     racer_count = df3.groupby("Racer")["Racer"].count()
     # Convert the Series to a DataFrame and reset the index
     df3 = racer_count.reset_index(name='Count')

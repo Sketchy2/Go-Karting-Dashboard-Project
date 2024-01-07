@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
+import re
+from datetime import datetime
 
 # Specify the path to chromedriver using Service
 s = Service(r'D:\Uni\Projects\Projects\GoKartsScraping\important\chromedriver.exe')
@@ -77,8 +79,34 @@ def convert_to_seconds(time_str):
     minutes, seconds, milliseconds = [int(part) for part in time_str.replace('.', ':').split(':')]
     return minutes * 60 + seconds + milliseconds / 1000
 
+def convert_id_readable(race_id):
+    # Use regular expressions to extract the time and date parts
+    match = re.match(r"(\d+):(\d+)(\d{2})\.(\d{2}\.\d{4})", race_id)
+    
+    if not match:
+        return "Invalid format"
+
+    # Extract the hour, minute, day, and the rest of the date parts
+    hour, minute, day, month_year = match.groups()
+    
+    # Format the hour to 12-hour time and assume it is PM
+    hour_int = int(hour)
+    # If the hour is less than 12, we assume it's PM, otherwise, we convert to 12-hour format
+    hour_formatted = f"{hour_int if hour_int <= 12 else hour_int - 12}"
+    time_suffix = "pm" if hour_int <= 12 else "am"
+    
+    # Construct the time with the correct suffix
+    time = f"{hour_formatted}:{minute}{time_suffix}"
+    
+    # Construct the date in the desired format
+    date_formatted = datetime.strptime(f"{day}.{month_year}", "%d.%m.%Y").strftime("%d/%m/%Y")
+    
+    # Return the formatted string
+    return f"{time} @ {date_formatted}"
+
 #Applying the function to the lap times column
 df['Lap Time Seconds'] = df['Lap Time'].apply(convert_to_seconds)
+df['RaceID Name'] = df['RaceID'].apply(convert_id_readable)
 
 df.to_csv('RaceTimes.csv', index=False)
 
