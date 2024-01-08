@@ -25,6 +25,13 @@ def laps(racer: str, race: int) -> List:
     results_button = driver.find_elements(By.CLASS_NAME,'results-btn')
     results_button[race].click()
 
+
+    position_finished = driver.find_elements(By.CLASS_NAME,'position')
+    position = position_finished[race].text.strip()[:1]
+    print(position)
+
+
+
     footer_buttons = driver.find_elements(By.CLASS_NAME, 'winners-footer')
     laps_button = footer_buttons[race].find_element(By.CLASS_NAME, 'open-laps-btn.middle')
     laps_button.click()
@@ -49,7 +56,7 @@ def laps(racer: str, race: int) -> List:
         lap_time_element = row.find_element(By.CSS_SELECTOR, '.time_laps.first')
         laps.append(lap_time_element.text.strip() if lap_time_element else None)
 
-    return time, date,laps
+    return time,date,laps,position
 
 racers = ["mitchell.whitten","mathew.stephen", "noah.thomson.4","josh.kolappillil","darian.king"]
 record_set = []
@@ -57,20 +64,20 @@ for racer in racers:
     index = 0
     while True:
         try:
-            time, date, raw_laps = laps(racer,index)
+            time, date, raw_laps, position = laps(racer,index)
             print(raw_laps)
             for i in range(len(raw_laps)):
                 if raw_laps[i] == "Return to Pit Box":
                     continue
                 else:
-                    record_set.append([time, date, racer, str(i+1), raw_laps[i]])
+                    record_set.append([time, date, racer, str(i+1), raw_laps[i], position])
             index += 1
         except:
             break
 
 
 """Formatting Database"""
-column_names = ['Time of Race', 'Date', 'Racer', 'Lap', 'Lap Time']
+column_names = ['Time of Race', 'Date', 'Racer', 'Lap', 'Lap Time', 'Position']
 df = pd.DataFrame(record_set,columns=column_names)
 df['RaceID'] = df['Time of Race'] + df['Date']
 
