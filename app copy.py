@@ -81,7 +81,7 @@ app.layout = html.Div([
 
     html.Div([
         html.Div([
-            html.Div("Lap Times Comparance",className="graph1-title"),
+            html.Div("Lap Times Comparance",className="graph-subtitle"),
             html.Div([
                 html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="graph1"),
                 html.Div([
@@ -92,21 +92,26 @@ app.layout = html.Div([
                         options=race_dropdown_options,
                         multi=False,
                         value="",
-                        style={'width': "40%"}
-                        ,className="dropdown race-dropdown")]),
+                        className="dropdown")]),
 
                     html.Div([
                         html.H3("Select Driver:"),
                         dcc.Dropdown(
-                        id="select_driver2",
-                        options=driver_dropdown_options,
+                        id="select_secondary_driver",
+                        options=race_dropdown_options,
                         multi=False,
                         value="",
-                        style={'width': "40%"},
                         className = "dropdown")])
                 ],className="slicers")
             ], className="graph1-box")
-        ], className="graph1-area")
+        ], className="graph1-area"),
+
+        html.Div([
+            html.Div("Average Lap Times",className="graph-subtitle"),
+            html.Div(
+                html.Div(dcc.Graph(id='avgchart', figure={},className='Chart2'), className="graph2"
+                ),className="graph2-box")
+            ], className="graph2-area")
     ],className="main")
 ], className="body")
 
@@ -115,7 +120,7 @@ app.layout = html.Div([
 
 """
 CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
-    - Update Basics Stats
+    - Update Basics Stats 
     - Update Driver Image
     - Update choices for second driver
     - Update Graphs"""
@@ -123,7 +128,8 @@ CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
 @app.callback(
     [Output(component_id="driver-card-name",component_property='children'),
     Output(component_id="driver-card-age",component_property='children'),
-    Output(component_id="driver-card-height",component_property='children')],
+    Output(component_id="driver-card-height",component_property='children'),
+    Output(component_id="select_secondary_driver",component_property="options")],
     Input(component_id="select_primary_driver",component_property='value')
 )
 
@@ -142,88 +148,92 @@ def Primary_Driver_Selected(selected_primary_driver):
 
         raceQuery = raceTimes.copy()
         raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
-        
-
-    return (selected_driver, selected_driver_age, selected_driver_height)
 
 
-# # Update Visual1 callback
-# @app.callback(
-#     Output('lapchart', 'figure'),
-#     [Input('select_race', 'value'),
-#     Input('select_primary_driver', 'value'),
-#     Input('select_secondary_driver', 'value')]
-# )
+    #UPDATING SECONDARY DRIVER OPTIONS
+    secondary_driver_filter = raceTimes[raceTimes['Racer'] != selected_primary_driver]['Racer'].unique()
+    secondary_driver_options = [{'label' : racer, 'value' : racer} for racer in secondary_driver_filter]
 
-# def update_visual1(race_selected, primary_driver, secondary_driver):
-
-#     df2 = raceTimes.copy()
-#     df2 = df2[df2["RaceID Name"] == race_selected]
-#     df2 = df2[df2["Racer"] == primary_driver]
-
-#     MainDriverData = go.Scatter(
-#         x = df2["Lap"],
-#         y = df2["Lap Time Seconds"],
-#         mode = 'lines',
-#         name = 'MainDriverData'
-#     )
+    return (selected_driver, selected_driver_age, selected_driver_height,secondary_driver_options)
 
 
-#     # If secondary driver is chosen, and the primary driver is not the same as the secondary driver - create new Scatter & Title
-#     if secondary_driver and primary_driver != secondary_driver:
+# Update graph1
+@app.callback(
+    Output(component_id='lapchart', component_property='figure'),
+    [Input(component_id='select_race', component_property='value'),
+    Input(component_id='select_primary_driver', component_property='value'),
+    Input(component_id='select_secondary_driver', component_property='value')]
+)
 
-#         df3 = raceTimes.copy()
-#         df3 = df3[df3["RaceID Name"] == race_selected]
-#         df3 = df3[df3["Racer"] == secondary_driver]
+def update_graph1(race_selected, primary_driver, secondary_driver):
 
-#         SecondaryDriverData = go.Scatter(
-#         x = df3["Lap"],
-#         y = df3["Lap Time Seconds"],
-#         mode = 'lines',
-#         name = 'SecondaryDriverData'
-#     )
-#         #Creating Graph
-#         fig = go.Figure(data=[MainDriverData, SecondaryDriverData])
-#         text = f"{primary_driver} vs. {secondary_driver} lap times"
+    LapTimesdb_primary = raceTimes.copy()
+    LapTimesdb_primary = LapTimesdb_primary[LapTimesdb_primary["RaceID Name"] == race_selected]
+    LapTimesdb_primary = LapTimesdb_primary[LapTimesdb_primary["Racer"] == primary_driver]
 
-
-#     else:
-#         fig = go.Figure(data=[MainDriverData])
-
-#     if primary_driver == None:
-#         text = ""
-#     else:
-#         text = f"{primary_driver} lap times"
+    MainDriverData = go.Scatter(
+        x = LapTimesdb_primary["Lap"],
+        y = LapTimesdb_primary["Lap Time Seconds"],
+        mode = 'lines',
+        name = 'MainDriverData'
+    )
 
 
-#     fig.update_layout(
-#         title={
-#             'text': text,
-#             'y': 0.95,  # Move the title a bit closer to the top of the figure
-#             'x': 0.5,
-#             'xanchor': 'center',
-#             'yanchor': 'top'
-#         },
-#         yaxis=dict(
-#             range=[31,65],
-#             gridcolor='black',
-#             zerolinecolor='black'
-#         ),
-#         xaxis=dict(
-#             gridcolor='black',
-#             zerolinecolor='black'
-#             ),
-#         paper_bgcolor = '#D9D9D9',
-#         plot_bgcolor = '#D9D9D9',
-#         font_color= 'black',
-#         title_font_size=24,
-#         margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
-#         xaxis_title="Lap",
-#         yaxis_title="Lap Time"
-#     )
+    # If secondary driver is chosen, and the primary driver is not the same as the secondary driver - create new Scatter & Title
+    if secondary_driver and primary_driver != secondary_driver:
+
+        LapTimesdb_secondary = raceTimes.copy()
+        LapTimesdb_secondary = LapTimesdb_secondary[LapTimesdb_secondary["RaceID Name"] == race_selected]
+        LapTimesdb_secondary = LapTimesdb_secondary[LapTimesdb_secondary["Racer"] == secondary_driver]
+
+        SecondaryDriverData = go.Scatter(
+        x = LapTimesdb_secondary["Lap"],
+        y = LapTimesdb_secondary["Lap Time Seconds"],
+        mode = 'lines',
+        name = 'SecondaryDriverData'
+    )
+        #Creating Graph
+        graph1 = go.Figure(data=[MainDriverData, SecondaryDriverData])
+        text = f"{primary_driver} vs. {secondary_driver} lap times"
 
 
-#     return fig
+    else:
+        graph1 = go.Figure(data=[MainDriverData])
+
+    if primary_driver == None:
+        text = ""
+    else:
+        text = f"{primary_driver} lap times"
+
+
+    graph1.update_layout(
+        title={
+            'text': text,
+            'y': 0.95,  # Move the title a bit closer to the top of the figure
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+        yaxis=dict(
+            range=[31,65],
+            gridcolor='black',
+            zerolinecolor='black'
+        ),
+        xaxis=dict(
+            gridcolor='black',
+            zerolinecolor='black'
+            ),
+        paper_bgcolor = '#D9D9D9',
+        plot_bgcolor = '#D9D9D9',
+        font_color= 'black',
+        title_font_size=24,
+        margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+        xaxis_title="Lap",
+        yaxis_title="Lap Time"
+    )
+
+
+    return graph1
 
 
 # # Update Visual2 callback
