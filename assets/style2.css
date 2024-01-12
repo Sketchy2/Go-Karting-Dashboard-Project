@@ -1,14 +1,16 @@
+html body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 .sidebar {
     background-color: #AF4F41;
-    position: fixed;
-    left: 0px;
     height: 100%;
     width: 480px;
 }
 
 .divider {
-    position: fixed;
-    left: 480px;
     background-color: white;
     height: 100%;
     width: 7px;
@@ -89,8 +91,8 @@
     width: 465px;
     height: 279px;
     position: relative;
-    top: 200px;
-    left: 6px;
+    bottom: -110px;
+    left: 8px;
 
 }
 
@@ -123,6 +125,57 @@
     font-size: 20px;
 }
 
-body {
+.graph1-area {
+    background-color: black;
+    height: 500px;
+    
+}
+
+.graph1-box {
+    background-color: #FFA364;
+    width: 1365px;
+    height: 343px;
+    border-radius: 15px; 
+    margin: 30px auto;
+    left: 100px;
+    display: flex;
+}
+
+.main {
     background-color: #3C2522;
+    width: 100%;
+}
+
+.graph1-title {
+    font-size:24px;
+    font-weight: bold;
+    color: white;
+    position: relative;
+    width: 30%;
+    left: 25px;
+    top: 20px;
+    padding: 5px;
+    border-bottom: white 3px solid;
+
+}
+
+.graph1 {
+    flex-grow: 3;
+    max-width: 75%;
+    max-height: 80%;
+    margin: 20px;
+}
+
+.slicers {
+    flex-grow: 1;
+}
+.body {
+    display: flex;
+    height: 100vh;
+}
+
+.dropdown {
+    height: 38;
+    width: 383;
+    background-color: black;
 }

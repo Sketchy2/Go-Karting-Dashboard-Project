@@ -79,10 +79,35 @@ app.layout = html.Div([
     ),
 
 
-    html.Div(
-        "Content",
-        className="main"
-    )
+    html.Div([
+        html.Div([
+            html.Div("Lap Times Comparance",className="graph1-title"),
+            html.Div([
+                html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="graph1"),
+                html.Div([
+                    html.Div([
+                        html.H3("Select Race:"),
+                        dcc.Dropdown(
+                        id="select_race",
+                        options=race_dropdown_options,
+                        multi=False,
+                        value="",
+                        style={'width': "40%"}
+                        ,className="dropdown race-dropdown")]),
+
+                    html.Div([
+                        html.H3("Select Driver:"),
+                        dcc.Dropdown(
+                        id="select_driver2",
+                        options=driver_dropdown_options,
+                        multi=False,
+                        value="",
+                        style={'width': "40%"},
+                        className = "dropdown")])
+                ],className="slicers")
+            ], className="graph1-box")
+        ], className="graph1-area")
+    ],className="main")
 ], className="body")
 
 
@@ -104,19 +129,22 @@ CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
 
 def Primary_Driver_Selected(selected_primary_driver):
 
-    driverQuery = driverInfo.copy()
-    driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
-    selected_driver = driverQuery.at[0,'Driver']
-    selected_driver_age = driverQuery.at[0,'Age']
-    selected_driver_height = driverQuery.at[0,'Height']
+    if selected_primary_driver == "":
+        selected_driver = ""
+        selected_driver_age = ""
+        selected_driver_height = ""
+    else:
+        driverQuery = driverInfo.copy()
+        driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
+        selected_driver = driverQuery.at[0,'Driver']
+        selected_driver_age = driverQuery.at[0,'Age']
+        selected_driver_height = driverQuery.at[0,'Height']
 
-    raceQuery = raceTimes.copy()
-    raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
-    
+        raceQuery = raceTimes.copy()
+        raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
+        
 
     return (selected_driver, selected_driver_age, selected_driver_height)
-
-    # return secondary_driver_options
 
 
 # # Update Visual1 callback
