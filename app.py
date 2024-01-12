@@ -7,7 +7,7 @@ from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 
 
-external_stylesheets = [dbc.themes.BOOTSTRAP, '/assets/style2.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP, '/assets/style.css']
 
 
 app = Dash(__name__,external_stylesheets=external_stylesheets)
