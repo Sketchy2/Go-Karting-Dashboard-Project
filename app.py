@@ -11,6 +11,7 @@ external_stylesheets = [dbc.themes.BOOTSTRAP, '/assets/style.css']
 
 
 app = Dash(__name__,external_stylesheets=external_stylesheets)
+server = app.server
 
 # -- Import and clean data + prepare filtered datasets
 raceTimes = pd.read_csv("RaceTimes.csv")
