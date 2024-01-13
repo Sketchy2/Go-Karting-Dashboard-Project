@@ -115,6 +115,16 @@ def convert_id_readable(race_id):
 df['Lap Time Seconds'] = df['Lap Time'].apply(convert_to_seconds)
 df['RaceID Name'] = df['RaceID'].apply(convert_id_readable)
 
+# Split 'RaceID Name' into two columns 'Race Date' and 'Race Time'
+df['Race Date'], df['Race Time'] = df['RaceID Name'].str.split('@',n=1).str
+
+# Convert 'Race Date' to a sortable format
+df['Race Date'] = pd.to_datetime(df['Race Date'], format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
+
+# Sort by 'Race Date' then 'Race Time'
+df = df.sort_values(by=['Race Date', 'Race Time'])
+
+
 df.to_csv('RaceTimes.csv', index=False)
 
 # Close the browser

@@ -63,9 +63,9 @@ app.layout = html.Div([
                     html.P("", id="driver-card-height", className="stat")
                 ],className="driver-card-right-category"),
 
-                html.Div([ #Average Position Div
-                    html.P("Average Position", className="position"),
-                    html.P("", id="driver-card-position", className="stat")
+                html.Div([ #Best Lap Div
+                    html.P("Best Lap", className="bestlap"),
+                    html.P("", id="driver-card-bestlap", className="stat")
                 ],className="driver-card-right-category")
 
             ],className="driver-card-right")
@@ -106,13 +106,21 @@ app.layout = html.Div([
                 ],className="slicers")
             ], className="graph1-box")
         ], className="graph1-area"),
-
+        
         html.Div([
-            html.Div("Average Lap Times",className="graph-subtitle"),
-            html.Div(
-                html.Div(dcc.Graph(id='avgchart', figure={},className='Chart2'), className="graph2"
-                ),className="graph2-box")
-            ], className="graph2-area")
+            html.Div([
+                html.Div("Average Lap Times",className="graph-subtitle"),
+                html.Div(
+                    html.Div(dcc.Graph(id='avgchart', figure={},className='Chart2'), className="graph2"                    ),className="box")
+                ], className="graph2-area"),
+
+            html.Div([
+                html.Div("Distribution Of Lap Times",className="graph-subtitle"),
+                html.Div(
+                    html.Div(dcc.Graph(id='distributionchart', figure={},className='Chart3'), className="graph3"
+                    ),className="box")
+                ], className="graph3-area")
+            ],className='row2')
     ],className="main")
 ], className="body")
 
@@ -130,7 +138,11 @@ CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
     [Output(component_id="driver-card-name",component_property='children'),
     Output(component_id="driver-card-age",component_property='children'),
     Output(component_id="driver-card-height",component_property='children'),
-    Output(component_id="select_secondary_driver",component_property="options")],
+    Output(component_id='driver-card-bestlap',component_property='children'),
+    Output(component_id='driver-card-pic',component_property='src'),
+    Output(component_id="select_secondary_driver",component_property="options"),
+    Output(component_id='avgchart',component_property='figure'),
+    Output(component_id='distributionchart',component_property='figure')],
     Input(component_id="select_primary_driver",component_property='value')
 )
 
@@ -140,22 +152,90 @@ def Primary_Driver_Selected(selected_primary_driver):
         selected_driver = ""
         selected_driver_age = ""
         selected_driver_height = ""
+        selected_driver_picture = None
     else:
         driverQuery = driverInfo.copy()
         driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
         selected_driver = driverQuery.at[0,'Driver']
         selected_driver_age = driverQuery.at[0,'Age']
         selected_driver_height = driverQuery.at[0,'Height']
+        selected_driver_picture = driverQuery.at[0,'Picture']
 
         raceQuery = raceTimes.copy()
         raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
 
-
+        selected_driver_best_lap = raceQuery["Lap Time Seconds"].min()
     #UPDATING SECONDARY DRIVER OPTIONS
     secondary_driver_filter = raceTimes[raceTimes['Racer'] != selected_primary_driver]['Racer'].unique()
     secondary_driver_options = [{'label' : racer, 'value' : racer} for racer in secondary_driver_filter]
 
-    return (selected_driver, selected_driver_age, selected_driver_height,secondary_driver_options)
+
+    # Update graph2
+    averageLapTimes = raceTimes.copy()
+    averageLapTimes = averageLapTimes[averageLapTimes["Racer"] == selected_primary_driver]
+    averageLapTimes = averageLapTimes.groupby('RaceID Name')['Lap Time Seconds'].mean()
+    averageLapTimes = averageLapTimes.reset_index()
+
+    MainDriverAvg = go.Bar(
+        x = averageLapTimes["RaceID Name"],
+        y = averageLapTimes["Lap Time Seconds"],
+        name = 'MainDriverAvg'
+    )
+
+    avgchart = go.Figure(data = [MainDriverAvg])
+
+    avgchart.update_layout(
+        yaxis=dict(
+            range=[31,59],
+            gridcolor='white',
+            zerolinecolor='white'
+        ),
+        xaxis=dict(
+            gridcolor='white',
+            zerolinecolor='white'
+            ),
+        paper_bgcolor = 'black',
+        plot_bgcolor = 'black',
+        font_color= 'white',
+        title_font_size=24,
+        margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+        xaxis_title="Race",
+        yaxis_title="Average Lap Time"
+    )
+
+    # Update graph3
+    distributiondb = raceTimes.copy()
+    distributiondb = distributiondb[distributiondb["Racer"] == selected_primary_driver]
+    bin_width = 0.35
+
+    #create histogram
+    distributionchart = go.Figure(data=[go.Histogram(
+        x = distributiondb['Lap Time Seconds'],
+        xbins=dict(
+            start= 35,
+            end= 50,
+            size=bin_width
+    ),
+    marker_color = 'blue',
+    opacity = 0.75
+    )])
+
+    distributionchart.update_layout(
+        xaxis=dict(
+            range=[35,50]
+        ),
+        xaxis_title_text='Lap Time Seconds',  # x-axis label
+        yaxis_title_text='Count',  # y-axis label
+        bargap=0.1,  # Gap between bars
+        paper_bgcolor = 'black',
+        plot_bgcolor = 'black',
+        bargroupgap=0.1,  # Gap between groups of bars
+        font_color= 'white',
+        title_font_size=24,
+        margin=dict(t=40, b=20,l=20,r=20)  # Decrease top margin to reduce space above the graph
+    )
+
+    return (selected_driver, selected_driver_age, selected_driver_height,selected_driver_best_lap,selected_driver_picture,secondary_driver_options, avgchart, distributionchart)
 
 
 # Update graph1
@@ -208,25 +288,18 @@ def update_graph1(race_selected, primary_driver, secondary_driver):
 
 
     graph1.update_layout(
-        title={
-            'text': text,
-            'y': 0.95,  # Move the title a bit closer to the top of the figure
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top'
-        },
         yaxis=dict(
             range=[31,65],
-            gridcolor='black',
-            zerolinecolor='black'
+            gridcolor='white',
+            zerolinecolor='white'
         ),
         xaxis=dict(
-            gridcolor='black',
-            zerolinecolor='black'
+            gridcolor='white',
+            zerolinecolor='white'
             ),
-        paper_bgcolor = '#D9D9D9',
-        plot_bgcolor = '#D9D9D9',
-        font_color= 'black',
+        paper_bgcolor = 'black',
+        plot_bgcolor = 'black',
+        font_color= 'white',
         title_font_size=24,
         margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
         xaxis_title="Lap",
@@ -235,134 +308,6 @@ def update_graph1(race_selected, primary_driver, secondary_driver):
 
 
     return graph1
-
-
-# # Update Visual2 callback
-# @app.callback(
-#     [Output('avgchart', 'figure'),
-#     Output('fastestchart','figure'),
-#     Output('distributionchart','figure')],
-#     Input('select_primary_driver', 'value')
-# )
-
-# def update_visual2(primary_driver):
-
-#     df2 = raceTimes.copy()
-#     df2 = df2[df2["Racer"] == primary_driver]
-#     df2 = df2.groupby('RaceID Name')['Lap Time Seconds'].mean()
-#     df2 = df2.reset_index()
-
-#     MainDriverAvg = go.Bar(
-#         x = df2["RaceID Name"],
-#         y = df2["Lap Time Seconds"],
-#         name = 'MainDriverAvg'
-#     )
-
-#     fig = go.Figure(data = [MainDriverAvg])
-
-#     if primary_driver == None:
-#         text = ""
-#     else:
-#         text = f"{primary_driver}'s Avg Lap Times"
-
-#     fig.update_layout(
-#         title={
-#             'text': text,
-#             'y': 0.95,  # Move the title a bit closer to the top of the figure
-#             'x': 0.5,
-#             'xanchor': 'center',
-#             'yanchor': 'top'
-#         },
-#         yaxis=dict(
-#             range=[31,59],
-#             gridcolor='black',
-#             zerolinecolor='black'
-#         ),
-#         xaxis=dict(
-#             gridcolor='black',
-#             zerolinecolor='black'
-#             ),
-#         paper_bgcolor = '#D9D9D9',
-#         plot_bgcolor = '#D9D9D9',
-#         font_color= 'black',
-#         title_font_size=24,
-#         margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
-#         xaxis_title="Race",
-#         yaxis_title="Average Lap Time"
-#     )
-
-
-#     df3 = raceTimes.copy()
-#     # Step 1: Group by 'RaceID Name' and find the minimum 'Lap Time Seconds'
-#     min_lap_times = df3.groupby('RaceID Name')['Lap Time Seconds'].min().reset_index()
-
-
-#     # Step 2: Merge with the original DataFrame to get the 'Racer' names
-#     df3 = pd.merge(min_lap_times, df3, on=['RaceID Name', 'Lap Time Seconds'], how='left')
-#     racer_count = df3.groupby("Racer")["Racer"].count()
-#     # Convert the Series to a DataFrame and reset the index
-#     df3 = racer_count.reset_index(name='Count')
-
-
-#     labels = df3["Racer"].unique()
-#     values = df3["Count"]
-
-#     MostFastestLaps = go.Pie(labels = labels, values = values)
-#     fig2 = go.Figure(data=[MostFastestLaps])
-
-#     fig2.update_layout(
-#         title={
-#             'text': "Driver With The Most Fastest Laps",
-#             'y': 0.95,  # Move the title a bit closer to the top of the figure
-#             'x': 0.5,
-#             'xanchor': 'center',
-#             'yanchor': 'top'
-#         },
-#         paper_bgcolor = '#D9D9D9',
-#         plot_bgcolor = '#D9D9D9',
-#         font_color= 'black',
-#         title_font_size=24,
-#         margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
-#     )
-
-#     df4 = raceTimes.copy()
-#     df4 = df4[df4["Racer"] == primary_driver]
-#     print(df4)
-#     min_lap_time = df4['Lap Time Seconds'].min()
-#     max_lap_time = df4['Lap Time Seconds'].max()
-#     bin_width = 0.35
-
-#     #create histogram
-#     fig3 = go.Figure(data=[go.Histogram(
-#         x = df4['Lap Time Seconds'],
-#         xbins=dict(
-#             start= 35,
-#             end= 50,
-#             size=bin_width
-#     ),
-#     marker_color = 'blue',
-#     opacity = 0.75
-#     )])
-
-#     fig3.update_layout(
-#         xaxis=dict(
-#             range=[35,50]
-#         ),
-#         title_text='Distribution of Lap Times',  # Title of the graph
-#         xaxis_title_text='Lap Time Seconds',  # x-axis label
-#         yaxis_title_text='Count',  # y-axis label
-#         bargap=0.1,  # Gap between bars
-#         paper_bgcolor = '#D9D9D9',
-#         plot_bgcolor = '#D9D9D9',
-#         bargroupgap=0.1,  # Gap between groups of bars
-#         font_color= 'black',
-#         title_font_size=24,
-#         margin=dict(t=40, b=20,l=20,r=20)  # Decrease top margin to reduce space above the graph
-#     )
-
-
-
-#     return fig,fig2,fig3
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
