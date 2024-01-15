@@ -111,7 +111,7 @@ app.layout = html.Div([
             html.Div([
                 html.Div("Average Lap Times",className="graph-subtitle"),
                 html.Div(
-                    html.Div(dcc.Graph(id='avgchart', figure={},className='Chart2'), className="graph2"                    ),className="box")
+                    html.Div(dcc.Graph(id='avgchart', figure={},className='Chart2'), className="graph2"),className="box")
                 ], className="graph2-area"),
 
             html.Div([
@@ -174,13 +174,25 @@ def Primary_Driver_Selected(selected_primary_driver):
     # Update graph2
     averageLapTimes = raceTimes.copy()
     averageLapTimes = averageLapTimes[averageLapTimes["Racer"] == selected_primary_driver]
-    averageLapTimes = averageLapTimes.groupby('RaceID Name')['Lap Time Seconds'].mean()
-    averageLapTimes = averageLapTimes.reset_index()
 
+    # Add a column for sorting
+    averageLapTimes['Sort Order'] = range(len(averageLapTimes))
+    print(averageLapTimes)
+    # Perform the groupby and compute the mean
+    grouped = averageLapTimes.groupby('RaceID Name', as_index=False)['Lap Time Seconds'].mean()
+
+    # Merge back with the original DataFrame using the sort order
+    averageLapTimes = averageLapTimes.drop('Lap Time Seconds', axis=1).merge(grouped, on='RaceID Name').sort_values('Sort Order').drop('Sort Order', axis=1)
+
+    # Now averageLapTimes will have the mean values but in the original order
+
+    print(averageLapTimes)
+
+    # Plotting the Bar Chart
     MainDriverAvg = go.Bar(
-        x = averageLapTimes["RaceID Name"],
-        y = averageLapTimes["Lap Time Seconds"],
-        name = 'MainDriverAvg'
+        x=averageLapTimes["RaceID Name"],
+        y=averageLapTimes["Lap Time Seconds"],
+        name='MainDriverAvg'
     )
 
     avgchart = go.Figure(data = [MainDriverAvg])
