@@ -2,10 +2,11 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from typing import List
-import time
+import time as clock
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import NoSuchElementException
 import pandas as pd
 import re
 from datetime import datetime
@@ -21,23 +22,38 @@ def laps(racer: str, race: int) -> List:
 """
 
     driver.get(f'https://www.racefacer.com/en/profile/' + racer +'/sessions')
+    driver.maximize_window()
 
-    results_button = driver.find_elements(By.CLASS_NAME,'results-btn')
-    results_button[race].click()
+    try:
+        # Try to find the element
+        close_button = WebDriverWait(driver, 1).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "button-close-cookies"))
+        )
+        driver.execute_script("arguments[0].click();",close_button)  # Click the button if it is found
+    except:
+        # If the element is not found, just continue
+        pass
 
+    results_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "results-btn"))
+    )
+    driver.execute_script("arguments[0].click();",results_button[race])
 
-    position_finished = driver.find_elements(By.CLASS_NAME,'position')
-    position = position_finished[race].text.strip()[:1]
-    print(position)
+    footer_buttons = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "winners-footer"))
+    )
 
-
-
-    footer_buttons = driver.find_elements(By.CLASS_NAME, 'winners-footer')
-    laps_button = footer_buttons[race].find_element(By.CLASS_NAME, 'open-laps-btn.middle')
-    laps_button.click()
+    laps_button = WebDriverWait(footer_buttons[race], 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "open-laps-btn.middle"))
+        )
+    driver.execute_script("arguments[0].click();",laps_button)
 
     #Finding date of race
-    dates_header = driver.find_elements(By.CLASS_NAME,'minified-stat.date')
+    dates_header = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "minified-stat.date"))
+    )
+
+
     date_class = dates_header[race].find_element(By.CLASS_NAME, "date")
     date = date_class.text.strip()
     
@@ -45,10 +61,13 @@ def laps(racer: str, race: int) -> List:
     time = time_class.text.strip()
     time = time[4:-2]
 
-
-    laps_area = driver.find_elements(By.CLASS_NAME,'tab_laps')
+    laps_area = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "tab_laps"))
+    )
     laps_area = laps_area[race]
+
     laps_table = laps_area.find_element(By.CLASS_NAME,'table_content')
+    
     rows = laps_table.find_elements(By.CLASS_NAME,'row')
 
     laps = []
@@ -56,28 +75,28 @@ def laps(racer: str, race: int) -> List:
         lap_time_element = row.find_element(By.CSS_SELECTOR, '.time_laps.first')
         laps.append(lap_time_element.text.strip() if lap_time_element else None)
 
-    return time,date,laps,position
+    return time,date,laps
 
 racers = ["mitchell.whitten","mathew.stephen", "noah.thomson.4","josh.kolappillil","darian.king"]
 record_set = []
 for racer in racers:
     index = 0
     while True:
-        try:
-            time, date, raw_laps, position = laps(racer,index)
+        if index == 5:
+            break
+        else:
+            time, date, raw_laps = laps(racer,index)
             print(raw_laps)
             for i in range(len(raw_laps)):
                 if raw_laps[i] == "Return to Pit Box":
                     continue
                 else:
-                    record_set.append([time, date, racer, str(i+1), raw_laps[i], position])
+                    record_set.append([time, date, racer, str(i+1), raw_laps[i]])
             index += 1
-        except:
-            break
 
 
 """Formatting Database"""
-column_names = ['Time of Race', 'Date', 'Racer', 'Lap', 'Lap Time', 'Position']
+column_names = ['Time of Race', 'Date', 'Racer', 'Lap', 'Lap Time']
 df = pd.DataFrame(record_set,columns=column_names)
 df['RaceID'] = df['Time of Race'] + df['Date']
 
@@ -115,8 +134,12 @@ def convert_id_readable(race_id):
 df['Lap Time Seconds'] = df['Lap Time'].apply(convert_to_seconds)
 df['RaceID Name'] = df['RaceID'].apply(convert_id_readable)
 
-# Split 'RaceID Name' into two columns 'Race Date' and 'Race Time'
-df['Race Date'], df['Race Time'] = df['RaceID Name'].str.split('@',n=1).str
+# Split 'RaceID Name' into 'Race Time' and 'Race Date'
+df[['Race Time', 'Race Date']] = df['RaceID Name'].str.split('@', n=1, expand=True)
+
+# Trim any leading/trailing whitespace
+df['Race Time'] = df['Race Time'].str.strip()
+df['Race Date'] = df['Race Date'].str.strip()
 
 # Convert 'Race Date' to a sortable format
 df['Race Date'] = pd.to_datetime(df['Race Date'], format='%d/%m/%Y').dt.strftime('%Y-%m-%d')
@@ -124,8 +147,7 @@ df['Race Date'] = pd.to_datetime(df['Race Date'], format='%d/%m/%Y').dt.strftime
 # Sort by 'Race Date' then 'Race Time'
 df = df.sort_values(by=['Race Date', 'Race Time'])
 
-
-df.to_csv('RaceTimes.csv', index=False)
+df.to_csv('raceTimes.csv', index=False)
 
 # Close the browser
 driver.quit()

@@ -153,6 +153,7 @@ def Primary_Driver_Selected(selected_primary_driver):
         selected_driver_age = ""
         selected_driver_height = ""
         selected_driver_picture = None
+        selected_driver_best_lap = None
     else:
         driverQuery = driverInfo.copy()
         driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
