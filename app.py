@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
-
+pd.set_option('display.max_rows', None)
 
 external_stylesheets = [dbc.themes.BOOTSTRAP, '/assets/style.css']
 
@@ -155,6 +155,7 @@ def Primary_Driver_Selected(selected_primary_driver):
         selected_driver_picture = None
         selected_driver_best_lap = None
     else:
+
         driverQuery = driverInfo.copy()
         driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
         selected_driver = driverQuery.at[0,'Driver']
@@ -177,7 +178,6 @@ def Primary_Driver_Selected(selected_primary_driver):
 
     # Add a column for sorting
     averageLapTimes['Sort Order'] = range(len(averageLapTimes))
-    print(averageLapTimes)
     # Perform the groupby and compute the mean
     grouped = averageLapTimes.groupby('RaceID Name', as_index=False)['Lap Time Seconds'].mean()
 
@@ -185,13 +185,10 @@ def Primary_Driver_Selected(selected_primary_driver):
     averageLapTimes = averageLapTimes.drop('Lap Time Seconds', axis=1).merge(grouped, on='RaceID Name').sort_values('Sort Order').drop('Sort Order', axis=1)
 
     # Now averageLapTimes will have the mean values but in the original order
-
-    print(averageLapTimes)
-
     # Plotting the Bar Chart
     MainDriverAvg = go.Bar(
-        x=averageLapTimes["RaceID Name"],
-        y=averageLapTimes["Lap Time Seconds"],
+        x=averageLapTimes["RaceID Name"].unique(),
+        y=averageLapTimes["Lap Time Seconds"].unique(),
         name='MainDriverAvg'
     )
 
@@ -260,67 +257,67 @@ def Primary_Driver_Selected(selected_primary_driver):
 )
 
 def update_graph1(race_selected, primary_driver, secondary_driver):
+    """
+    Generate a graph comparing lap times between two drivers.
+    """
 
-    LapTimesdb_primary = raceTimes.copy()
-    LapTimesdb_primary = LapTimesdb_primary[LapTimesdb_primary["RaceID Name"] == race_selected]
-    LapTimesdb_primary = LapTimesdb_primary[LapTimesdb_primary["Racer"] == primary_driver]
-
-    MainDriverData = go.Scatter(
-        x = LapTimesdb_primary["Lap"],
-        y = LapTimesdb_primary["Lap Time Seconds"],
-        mode = 'lines',
-        name = 'MainDriverData'
-    )
-
-
-    # If secondary driver is chosen, and the primary driver is not the same as the secondary driver - create new Scatter & Title
-    if secondary_driver and primary_driver != secondary_driver:
-
-        LapTimesdb_secondary = raceTimes.copy()
-        LapTimesdb_secondary = LapTimesdb_secondary[LapTimesdb_secondary["RaceID Name"] == race_selected]
-        LapTimesdb_secondary = LapTimesdb_secondary[LapTimesdb_secondary["Racer"] == secondary_driver]
-
-        SecondaryDriverData = go.Scatter(
-        x = LapTimesdb_secondary["Lap"],
-        y = LapTimesdb_secondary["Lap Time Seconds"],
-        mode = 'lines',
-        name = 'SecondaryDriverData'
-    )
-        #Creating Graph
-        graph1 = go.Figure(data=[MainDriverData, SecondaryDriverData])
-        text = f"{primary_driver} vs. {secondary_driver} lap times"
-
-
+    # Return an empty figure if the primary driver is not selected
+    if not primary_driver:
+        graph1 = go.Figure(data=[])
     else:
-        graph1 = go.Figure(data=[MainDriverData])
 
-    if primary_driver == None:
-        text = ""
-    else:
-        text = f"{primary_driver} lap times"
+        # Filter lap times for the primary driver
 
 
+        LapTimesdb_primary = raceTimes.copy()
+        LapTimesdb_primary = LapTimesdb_primary[LapTimesdb_primary["Racer"] == primary_driver].reset_index()
+        LapTimesdb_primary = LapTimesdb_primary[LapTimesdb_primary["RaceID Name"] == race_selected]  
+        MainDriverData = go.Scatter(
+            x=LapTimesdb_primary["Lap"],
+            y=LapTimesdb_primary["Lap Time Seconds"],
+            mode='lines',
+            name='MainDriverData'
+        )
+
+        # Initialize the figure with primary driver data
+
+        # Add secondary driver data if selected and different from the primary driver
+        if secondary_driver and primary_driver != secondary_driver:
+            LapTimesdb_secondary = raceTimes.copy()
+            LapTimesdb_secondary = LapTimesdb_secondary[LapTimesdb_secondary["Racer"] == secondary_driver].reset_index()
+            LapTimesdb_secondary = LapTimesdb_secondary[LapTimesdb_secondary["RaceID Name"] == race_selected]
+
+            SecondaryDriverData = go.Scatter(
+                x=LapTimesdb_secondary["Lap"],
+                y=LapTimesdb_secondary["Lap Time Seconds"],
+                mode='lines',
+                name='SecondaryDriverData'
+            )
+            graph1 = go.Figure(data=[MainDriverData, SecondaryDriverData])
+        else:
+            graph1 = go.Figure(data=[MainDriverData])
+
+    # Update graph layout
     graph1.update_layout(
         yaxis=dict(
-            range=[31,65],
+            range=[31, 65],
             gridcolor='white',
             zerolinecolor='white'
         ),
         xaxis=dict(
             gridcolor='white',
             zerolinecolor='white'
-            ),
-        paper_bgcolor = 'black',
-        plot_bgcolor = 'black',
-        font_color= 'white',
+        ),
+        paper_bgcolor='black',
+        plot_bgcolor='black',
+        font_color='white',
         title_font_size=24,
-        margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+        margin=dict(t=40, b=20, l=20, r=20), # Adjusted margins
         xaxis_title="Lap",
         yaxis_title="Lap Time"
-    )
-
-
+        )
     return graph1
+
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
