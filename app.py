@@ -142,11 +142,13 @@ CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
     Output(component_id='driver-card-pic',component_property='src'),
     Output(component_id="select_secondary_driver",component_property="options"),
     Output(component_id='avgchart',component_property='figure'),
-    Output(component_id='distributionchart',component_property='figure')],
+    Output(component_id='distributionchart',component_property='figure'),
+    Output(component_id="select_race", component_property='options')],
     Input(component_id="select_primary_driver",component_property='value')
 )
 
 def Primary_Driver_Selected(selected_primary_driver):
+
 
     if selected_primary_driver == "":
         selected_driver = ""
@@ -154,8 +156,9 @@ def Primary_Driver_Selected(selected_primary_driver):
         selected_driver_height = ""
         selected_driver_picture = None
         selected_driver_best_lap = None
+        unique_drivers = raceTimes['Racer'].unique()
+        unique_race_options = [{'label':racer,'value': racer} for racer in unique_drivers]
     else:
-
         driverQuery = driverInfo.copy()
         driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
         selected_driver = driverQuery.at[0,'Driver']
@@ -165,12 +168,15 @@ def Primary_Driver_Selected(selected_primary_driver):
 
         raceQuery = raceTimes.copy()
         raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
+        print(raceQuery)
+        new_unique_races = raceQuery['RaceID Name'].unique()
+        unique_race_options = [{'label': race, 'value': race} for race in new_unique_races]
 
         selected_driver_best_lap = raceQuery["Lap Time Seconds"].min()
+
     #UPDATING SECONDARY DRIVER OPTIONS
     secondary_driver_filter = raceTimes[raceTimes['Racer'] != selected_primary_driver]['Racer'].unique()
     secondary_driver_options = [{'label' : racer, 'value' : racer} for racer in secondary_driver_filter]
-
 
     # Update graph2
     averageLapTimes = raceTimes.copy()
@@ -245,7 +251,7 @@ def Primary_Driver_Selected(selected_primary_driver):
         margin=dict(t=40, b=20,l=20,r=20)  # Decrease top margin to reduce space above the graph
     )
 
-    return (selected_driver, selected_driver_age, selected_driver_height,selected_driver_best_lap,selected_driver_picture,secondary_driver_options, avgchart, distributionchart)
+    return (selected_driver, selected_driver_age, selected_driver_height,selected_driver_best_lap,selected_driver_picture,secondary_driver_options, avgchart, distributionchart,unique_race_options)
 
 
 # Update graph1
