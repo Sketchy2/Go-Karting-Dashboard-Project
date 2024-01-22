@@ -3,6 +3,7 @@ import numpy as np
 import plotly as plt
 import plotly.express as px
 import plotly.graph_objects as go
+from waitress import serve
 from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 pd.set_option('display.max_rows', None)
@@ -328,4 +329,4 @@ def update_graph1(race_selected, primary_driver, secondary_driver):
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run_server(debug=False, host = '0.0.0.0')
+    serve(app.run_server(debug=False, host='0.0.0.0', port = 8050))
