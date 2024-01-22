@@ -151,7 +151,7 @@ CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
 
 def Primary_Driver_Selected(selected_primary_driver):
 
-
+    print(f"selected  {selected_primary_driver}")
     if selected_primary_driver == "":
         selected_driver = ""
         selected_driver_age = ""
@@ -170,7 +170,6 @@ def Primary_Driver_Selected(selected_primary_driver):
 
         raceQuery = raceTimes.copy()
         raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
-        print(raceQuery)
         new_unique_races = raceQuery['RaceID Name'].unique()
         unique_race_options = [{'label': race, 'value': race} for race in new_unique_races]
 
