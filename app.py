@@ -329,4 +329,4 @@ def update_graph1(race_selected, primary_driver, secondary_driver):
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
-    serve(app.run_server, host='0.0.0.0', port = 8050)
+    serve(app.server, host='0.0.0.0', port = 8050)
