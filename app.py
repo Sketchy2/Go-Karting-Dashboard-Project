@@ -328,4 +328,4 @@ def update_graph1(race_selected, primary_driver, secondary_driver):
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False, host = '0.0.0.0')
