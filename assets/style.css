@@ -21,7 +21,7 @@ html body {
 
 .sidebar {
     background-color: #AF4F41;
-    height: 50vw;
+    height: 100vh;
     width: 480px;
 }
 
@@ -144,7 +144,8 @@ html body {
 
 .graph1-box {
     background-color: #FFA364;
-    height: 350px;
+    height: 35vh;
+    width: 71vw;
     border-radius: 15px; 
     margin: 30px 25px;
     display: flex;
@@ -153,7 +154,7 @@ html body {
 .main {
     background-color: #3C2522;
     width: 100vw;
-    height: 50vw;
+    height: 100vh;
 }
 
 .graph-subtitle {
@@ -200,20 +201,24 @@ html body {
 .box {
     background-color: #FFA364;
     height: 350px;
+    width: 34vw;
     border-radius: 15px; 
-    margin: 30px 25px 0;
+    margin: 30px 0px;
 }
 .row2 {
-    width: 100%;
+    width: 72vw;
+    margin: 30px 25px;
     display: flex;
 }
 
 .graph3-area {
   flex-grow: 1;
+  justify-content: space-between;
 }
 
 .graph2-area {
   flex-grow: 1;
+  justify-content: space-between;
 }
 
 .Chart1 {
