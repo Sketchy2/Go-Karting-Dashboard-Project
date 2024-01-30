@@ -19,12 +19,14 @@ server = app.server
 raceTimes = pd.read_csv("RaceTimes.csv")
 
 #Option for races
-unique_races = raceTimes['RaceID Name'].unique()
-race_dropdown_options = [{'label': race, 'value': race} for race in unique_races]
+race_dropdown_options = []
 
 #Option for drivers
 unique_drivers = raceTimes['Racer'].unique()
 driver_dropdown_options = [{'label':racer,'value': racer} for racer in unique_drivers]
+
+
+track_dropdown_options = []
 
 Driver = ""
 
@@ -47,6 +49,19 @@ app.layout = html.Div([
             multi=False,
             placeholder="Select a Driver",
             value=""),
+
+        html.H5("Select Track: ",className="subtitle"), #"SELECT TRACK"
+
+        dcc.Dropdown( #Drop down list
+            id="select_track",
+            className="select_track",
+            options=track_dropdown_options,
+            multi=False,
+            placeholder="Select a Track",
+            value="",
+            disabled=True),
+
+
         html.Div([ #DriverCard
             
             html.Div([ #Driver-card Left
@@ -139,30 +154,33 @@ CALL BACK FOR WHEN PRIMARY DRIVER IS CHOSEN:
     - Update Graphs"""
 
 @app.callback(
-    [Output(component_id="driver-card-name",component_property='children'),
-    Output(component_id="driver-card-age",component_property='children'),
-    Output(component_id="driver-card-height",component_property='children'),
+    [Output(component_id='driver-card-name',component_property='children'),
+    Output(component_id='driver-card-age',component_property='children'),
+    Output(component_id='driver-card-height',component_property='children'),
     Output(component_id='driver-card-bestlap',component_property='children'),
     Output(component_id='driver-card-pic',component_property='src'),
-    Output(component_id="select_secondary_driver",component_property="options"),
+    Output(component_id='select_secondary_driver',component_property='options'),
     Output(component_id='avgchart',component_property='figure'),
     Output(component_id='distributionchart',component_property='figure'),
-    Output(component_id="select_race", component_property='options')],
-    Input(component_id="select_primary_driver",component_property='value')
+    Output(component_id='select_race', component_property='options'),
+    Output(component_id='select_track',component_property='disabled'),
+    Output(component_id='select_track',component_property='options')],
+    [Input(component_id='select_primary_driver',component_property='value')]
 )
+#ADD INPUT SO THAT USER MUST PICK A TRACK FOR ANYTHING TO UPDATE??
 
 def Primary_Driver_Selected(selected_primary_driver):
-
-    print(f"selected  {selected_primary_driver}")
     if selected_primary_driver == "":
         selected_driver = ""
         selected_driver_age = ""
         selected_driver_height = ""
         selected_driver_picture = None
         selected_driver_best_lap = None
-        unique_drivers = raceTimes['Racer'].unique()
-        unique_race_options = [{'label':racer,'value': racer} for racer in unique_drivers]
+        unique_race_options = []
+        isdisabled = True
+        selected_track_options = []
     else:
+        print(f"selected  {selected_primary_driver}")
         driverQuery = driverInfo.copy()
         driverQuery = driverQuery[driverQuery["raceFacerID"] == selected_primary_driver].reset_index()
         selected_driver = driverQuery.at[0,'Driver']
@@ -174,6 +192,10 @@ def Primary_Driver_Selected(selected_primary_driver):
         raceQuery = raceQuery[raceQuery["Racer"] == selected_primary_driver].reset_index()
         new_unique_races = raceQuery['RaceID Name'].unique()
         unique_race_options = [{'label': race, 'value': race} for race in new_unique_races]
+
+        track_options = raceQuery['Track Name'].unique()
+        selected_track_options = [{'label': race, 'value': race} for race in track_options]
+        isdisabled = False
 
         selected_driver_best_lap = raceQuery["Lap Time Seconds"].min()
 
@@ -256,7 +278,7 @@ def Primary_Driver_Selected(selected_primary_driver):
         dragmode=False
     )
 
-    return (selected_driver, selected_driver_age, selected_driver_height,selected_driver_best_lap,selected_driver_picture,secondary_driver_options, avgchart, distributionchart,unique_race_options)
+    return (selected_driver, selected_driver_age, selected_driver_height,selected_driver_best_lap,selected_driver_picture,secondary_driver_options, avgchart, distributionchart,unique_race_options,isdisabled,selected_track_options)
 
 
 # Update graph1

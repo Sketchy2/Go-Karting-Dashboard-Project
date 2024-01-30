@@ -35,7 +35,7 @@ html body {
     text-align: center;
     font-weight: bold;
     color: white;
-    width: 60%;
+    width: 100%;
     margin: 25px auto;
     font-size: 48px;
 }
@@ -44,20 +44,31 @@ html body {
     text-align:center;
     font-weight: lighter;
     color: white;
-    width: 60%;
-    margin: 25px auto;
-    font-size: 40px;
+    width: 100%;
+    margin: 10px auto;
+    font-size: 35px;
 }
 
 .driver-dropdown {
     width: 445px;
-    margin: 25px auto;
+    margin: 0px auto;
     opacity: 0.8;
 }
 
 .driver-dropdown:hover {
     opacity: 1;
 }
+
+.select_track {
+    width: 445px;
+    margin: 0px auto;
+    opacity: 0.8;
+}
+
+.select_track:hover {
+    opacity: 1;
+}
+
 
 .driver-card-left {
     background-color: #FFA364;
@@ -80,7 +91,7 @@ html body {
 }
 
 .driver-card {
-    margin: 0 auto;
+    margin: 15px auto;
     border-radius: 25px;
     height: 226px;
     width: 445px;

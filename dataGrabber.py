@@ -23,16 +23,19 @@ def laps(racer: str, race: int) -> List:
 
     driver.get(f'https://www.racefacer.com/en/profile/' + racer +'/sessions')
     driver.maximize_window()
-
-    try:
-        # Try to find the element
-        close_button = WebDriverWait(driver, 1).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "button-close-cookies"))
-        )
-        driver.execute_script("arguments[0].click();",close_button)  # Click the button if it is found
-    except:
-        # If the element is not found, just continue
-        pass
+    if race > 4:
+        try:
+            expand_results = WebDriverWait(driver,10).until(
+                EC.element_to_be_clickable((By.CLASS_NAME,"show-more.load-more-sessions-btn"))
+            )
+            driver.execute_script("arguments[0].click();",expand_results)
+            clock.sleep(5)
+        except:
+            raise KeyError
+        
+    
+    kart_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'minified-stat track-kart')]")
+    kart_type = kart_elements[race].find_element(By.XPATH, ".//div[4]").text
 
     results_button = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "results-btn"))
@@ -75,28 +78,28 @@ def laps(racer: str, race: int) -> List:
         lap_time_element = row.find_element(By.CSS_SELECTOR, '.time_laps.first')
         laps.append(lap_time_element.text.strip() if lap_time_element else None)
 
-    return time,date,laps
+    return time,date,laps, kart_type
 
 racers = ["mitchell.whitten","mathew.stephen", "noah.thomson.4","josh.kolappillil","darian.king"]
 record_set = []
 for racer in racers:
     index = 0
     while True:
-        if index == 5:
-            break
-        else:
-            time, date, raw_laps = laps(racer,index)
+        try:
+            time, date, raw_laps,kart_type = laps(racer,index)
             print(raw_laps)
             for i in range(len(raw_laps)):
                 if raw_laps[i] == "Return to Pit Box":
                     continue
                 else:
-                    record_set.append([time, date, racer, str(i+1), raw_laps[i]])
+                    record_set.append([time, date, racer, str(i+1), raw_laps[i], kart_type])
             index += 1
+        except:
+            break
 
 
 """Formatting Database"""
-column_names = ['Time of Race', 'Date', 'Racer', 'Lap', 'Lap Time']
+column_names = ['Time of Race', 'Date', 'Racer', 'Lap', 'Lap Time', 'Kart Type']
 df = pd.DataFrame(record_set,columns=column_names)
 df['RaceID'] = df['Time of Race'] + df['Date']
 
@@ -104,6 +107,18 @@ df['RaceID'] = df['Time of Race'] + df['Date']
 def convert_to_seconds(time_str):
     minutes, seconds, milliseconds = [int(part) for part in time_str.replace('.', ':').split(':')]
     return minutes * 60 + seconds + milliseconds / 1000
+
+
+def identify_race(kartType):
+    if kartType == 'SUPER KART':
+        return 'Lakeside Track'
+    elif kartType == 'SPRINT КАРТС':
+        return 'Penrite Track'
+    elif kartType == 'Sodi RX8':
+        return 'Kartdrome'
+    elif kartType == 'Pro Kart':
+        return 'Brisbane Slideways'
+
 
 def convert_id_readable(race_id):
     # Use regular expressions to extract the time and date parts
@@ -133,6 +148,7 @@ def convert_id_readable(race_id):
 #Applying the function to the lap times column
 df['Lap Time Seconds'] = df['Lap Time'].apply(convert_to_seconds)
 df['RaceID Name'] = df['RaceID'].apply(convert_id_readable)
+df['Track Name'] = df['Kart Type'].apply(identify_race)
 
 split_data = df['RaceID Name'].str.split('@ ', n=1, expand=True)
 df['Race Time'] = split_data[0]
