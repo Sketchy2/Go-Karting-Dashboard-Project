@@ -84,42 +84,44 @@ app.layout = html.Div([
 
     html.Div([
         html.Div([
-            html.Div("Lap Times Comparance",className="graph-subtitle"),
             html.Div([
-                html.Div(dcc.Graph(id='lapchart', figure={},className='Chart1'), className="graph1"),
+                html.Div("Lap Times Comparance",className="graph-subtitle"),
                 html.Div([
+                    html.Div(dcc.Graph(id='lapchart', figure={},config={'displayModeBar':False},className='Chart1'), className="graph1"),
                     html.Div([
-                        html.H3("Select Race:"),
-                        dcc.Dropdown(
-                        id="select_race",
-                        options=race_dropdown_options,
-                        multi=False,
-                        value="",
-                        className="dropdown")]),
+                        html.Div([
+                            html.H3("Select Race:"),
+                            dcc.Dropdown(
+                            id="select_race",
+                            options=race_dropdown_options,
+                            multi=False,
+                            value="",
+                            className="dropdown")]),
 
-                    html.Div([
-                        html.H3("Select Driver:"),
-                        dcc.Dropdown(
-                        id="select_secondary_driver",
-                        options=race_dropdown_options,
-                        multi=False,
-                        value="",
-                        className = "dropdown")])
-                ],className="slicers")
-            ], className="graph1-box")
-        ], className="graph1-area"),
+                        html.Div([
+                            html.H3("Select Driver:"),
+                            dcc.Dropdown(
+                            id="select_secondary_driver",
+                            options=race_dropdown_options,
+                            multi=False,
+                            value="",
+                            className = "dropdown")])
+                    ],className="slicers")
+                ], className="graph1-box")
+            ], className="graph1-area")
+        ], className="row1"),
         
         html.Div([
             html.Div([
                 html.Div("Average Lap Times",className="graph-subtitle"),
                 html.Div(
-                    html.Div(dcc.Graph(id='avgchart', figure={},className='Chart2'), className="graph2"),className="box")
+                    html.Div(dcc.Graph(id='avgchart', figure={},config={'displayModeBar':False},className='Chart2'), className="graph2"),className="box")
                 ], className="graph2-area"),
 
             html.Div([
                 html.Div("Distribution Of Lap Times",className="graph-subtitle"),
                 html.Div(
-                    html.Div(dcc.Graph(id='distributionchart', figure={},className='Chart3'), className="graph3"
+                    html.Div(dcc.Graph(id='distributionchart', figure={},config={'displayModeBar':False},className='Chart3'), className="graph3"
                     ),className="box")
                 ], className="graph3-area")
             ],className='row2')
@@ -217,7 +219,8 @@ def Primary_Driver_Selected(selected_primary_driver):
         title_font_size=24,
         margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
         xaxis_title="Race",
-        yaxis_title="Average Lap Time"
+        yaxis_title="Average Lap Time",
+        dragmode=False
     )
 
     # Update graph3
@@ -249,7 +252,8 @@ def Primary_Driver_Selected(selected_primary_driver):
         bargroupgap=0.1,  # Gap between groups of bars
         font_color= 'white',
         title_font_size=24,
-        margin=dict(t=40, b=20,l=20,r=20)  # Decrease top margin to reduce space above the graph
+        margin=dict(t=40, b=20,l=20,r=20),  # Decrease top margin to reduce space above the graph
+        dragmode=False
     )
 
     return (selected_driver, selected_driver_age, selected_driver_height,selected_driver_best_lap,selected_driver_picture,secondary_driver_options, avgchart, distributionchart,unique_race_options)
@@ -321,11 +325,12 @@ def update_graph1(race_selected, primary_driver, secondary_driver):
         title_font_size=24,
         margin=dict(t=40, b=20, l=20, r=20), # Adjusted margins
         xaxis_title="Lap",
-        yaxis_title="Lap Time"
+        yaxis_title="Lap Time",
+        dragmode=False
         )
     return graph1
 
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run(debug=True)
