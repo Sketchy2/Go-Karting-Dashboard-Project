@@ -11,7 +11,6 @@
   <p align="center">
     A Dashboard that pulls Data from RaceFacer website to display data!
     <br />
-    <a href="http://13.210.171.94:8050/">View Demo</a>
   </p>
 </div>
 
